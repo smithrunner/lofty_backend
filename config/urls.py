@@ -16,8 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from dogAPI.views import *
+from django.urls import include, re_path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('keys/', KeyListView.as_view(), name='keys')
+    path('keys/', KeyListView.as_view(), name='keys'),
+    re_path(r'^', include('dogAPI.urls'))
 ]
