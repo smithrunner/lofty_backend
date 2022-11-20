@@ -20,6 +20,6 @@ from django.urls import include, re_path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('keys/', KeyListView.as_view(), name='keys'),
-    re_path(r'^', include('dogAPI.urls'))
+    re_path(r'^', include('dogAPI.urls')),
+    path('',include('dogAPI.urls'))
 ]

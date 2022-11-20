@@ -16,8 +16,16 @@ import urllib
 import urllib.request
 from .models import CachedImage
 
-class KeyListView(ListView):
-    model = Key
+from imagekit import ImageSpec
+from imagekit.processors import TrimBorderColor, Adjust
+
+
+class ModifiedImage(ImageSpec):
+    processors = [TrimBorderColor(),
+                  Adjust(contrast=1.2, sharpness=1.1)
+                  ]
+    format = 'JPEG'
+    options = {'quality': 60}
 
 # GET api/keys : will return a list of all key:value pairs
 # POST api/keys : receives a string and uses this as a the key for a new key:value
@@ -71,16 +79,11 @@ def dog_grab(request):
         if r.status_code == 200:
             par = r.json()
             for entry in par['message']:
-                #webbrowser.open(entry)
-                #res = requests.get(entry, stream = True)
 
                 imageField = CachedImage()
                 imageField.url = entry
                 imageField.cache()
-                
 
-                #print(res.content)
-                #print(dir(res))
             return JsonResponse({'yay':'image saved'})
         return JsonResponse({'boo':'no image saved'})
 
@@ -89,6 +92,16 @@ def dog_grab(request):
 # record number for the dog image files. This method returns the orginal image,
 # a modified version of that image and the original metadata. 
 @api_view(['GET'])
-def dog_display(request):
-    return JsonResponse('this isnt built yet')
+def dog_display(request, pk):
+    try:
+        cachedimage = CachedImage.objects.get(pk=pk)
+    except CachedImage.DoesNotExist:
+        return JsonResponse({'message': 'The image with that index does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+    print(cachedimage.photo_modified)
+    #return render(request,'index.html',{'response':cachedimage})
+    return JsonResponse({"original_image":str(cachedimage.photo),
+                         "modified_image":str(cachedimage.photo_modified.url),
+                         "meta_data":str(cachedimage.exif)})
+
 
