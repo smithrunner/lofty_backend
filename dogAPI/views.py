@@ -11,6 +11,10 @@ from dogAPI.serializers import KeySerializer
 from rest_framework.decorators import api_view
 import requests
 
+from django.core.files import File
+import urllib
+import urllib.request
+from .models import CachedImage
 
 class KeyListView(ListView):
     model = Key
@@ -70,8 +74,13 @@ def dog_grab(request):
                 #webbrowser.open(entry)
                 #res = requests.get(entry, stream = True)
 
-                print(res.content)
-                print(dir(res))
+                imageField = CachedImage()
+                imageField.url = entry
+                imageField.cache()
+                
+
+                #print(res.content)
+                #print(dir(res))
             return JsonResponse({'yay':'image saved'})
         return JsonResponse({'boo':'no image saved'})
 
