@@ -33,13 +33,13 @@ def key_list(request):
 def key_detail(request, pk):
     # find key/value pair by key
     try:
-        key = Key.objects.get(pk=pk)
+        key = Key.objects.get(key=pk)
     except Key.DoesNotExist:
         return JsonResponse({'message': 'The key does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'PUT':
-        key_data = JSONParser().parse(request)
-        key_serializer = KeySerializer(key, data=key_data)
+        new_data = {'key': key.key,'value': key.value + 1}
+        key_serializer = KeySerializer(key, data=new_data)
         if key_serializer.is_valid():
             key_serializer.save()
             return JsonResponse(key_serializer.data)
