@@ -18,8 +18,10 @@ from .models import CachedImage
 
 """Setting up framework for a queuing system to help control high volume
 of api events happening to update keys. Hit some road blocks and need to
-think through more if this is the right approach. See Notion <> for more
-details/discussion on this. I am working on implemeting Zato queuing infrastructure: https://zato.io/en/docs/3.2/index.html
+think through more if this is the right approach. See Notion https://www.notion.so/How-Does-It-Work-0761f3bcb34d4a8eac2c859b7e148bff
+for more details/discussion on this.
+
+I am working on implemeting Zato queuing infrastructure: https://zato.io/en/docs/3.2/index.html
 
 import pymqi
 
