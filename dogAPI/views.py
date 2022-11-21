@@ -16,16 +16,37 @@ import urllib
 import urllib.request
 from .models import CachedImage
 
-from imagekit import ImageSpec
-from imagekit.processors import TrimBorderColor, Adjust
+"""Setting up framework for a queuing system to help control high volume
+of api events happening to update keys. Hit some road blocks and need to
+think through more if this is the right approach. See Notion <> for more
+details/discussion on this. I am working on implemeting Zato queuing infrastructure: https://zato.io/en/docs/3.2/index.html
+
+import pymqi
+
+queue_manager = 'QM1'
+channel = 'DEV.APP.SVRCONN'
+host = '127.0.0.1'
+port = '1414'
+conn_info = '%s(%s)' % (host, port)
+
+qmgr = pymqi.connect(queue_manager, channel, conn_info)
+qmgr.disconnect()
+
+queue_name = 'TEST.1'
 
 
-class ModifiedImage(ImageSpec):
-    processors = [TrimBorderColor(),
-                  Adjust(contrast=1.2, sharpness=1.1)
-                  ]
-    format = 'JPEG'
-    options = {'quality': 60}
+
+qmgr = pymqi.connect(queue_manager, channel, conn_info)
+
+queue = pymqi.Queue(qmgr, queue_name)
+queue.put(message)
+queue.close()
+
+qmgr.disconnect()
+
+
+"""
+
 
 # GET api/keys : will return a list of all key:value pairs
 # POST api/keys : receives a string and uses this as a the key for a new key:value
@@ -55,6 +76,17 @@ def key_list(request):
 # key:value pair for that key. If one is found, increase the value by 1
 @api_view(['PUT'])
 def key_detail(request, pk):
+    """ Second part of the queuing system. Idea was to try and put the request
+    in a queue for the system to work on.
+    
+    qmgr = pymqi.connect(queue_manager, channel, conn_info)
+
+    queue = pymqi.Queue(qmgr, queue_name)
+    queue.put(request)
+    queue.close()
+
+    qmgr.disconnect()
+    """
     # find key/value pair by key
     try:
         key = Key.objects.get(key=pk)
@@ -71,11 +103,12 @@ def key_detail(request, pk):
 
 
 # POST api/dogs : Will use the dog.ceo endpoint (https://dog.ceo/dog-api/documentation/)
-# to retreive 24 random dog images including metadata.
+# to retreive 24 random dog images including metadata. The original images will be saved to local files under
+# <appname>/static/images directory. Image metadata and URL will be saved in postgres under the table dogAPI_cachedimage
 @api_view(['POST'])
 def dog_grab(request):
     if request.method == 'POST':
-        r = requests.get('https://dog.ceo/api/breeds/image/random/1', params=request.GET)
+        r = requests.get('https://dog.ceo/api/breeds/image/random/24', params=request.GET)
         if r.status_code == 200:
             par = r.json()
             for entry in par['message']:
@@ -90,7 +123,7 @@ def dog_grab(request):
 
 # GET /api/dogs/<ID> : Receives an ID correspending to the database table
 # record number for the dog image files. This method returns the orginal image,
-# a modified version of that image and the original metadata. 
+# a modified version (shrunk to thumbnail size) of that image and the original metadata. 
 @api_view(['GET'])
 def dog_display(request, pk):
     try:
@@ -98,8 +131,6 @@ def dog_display(request, pk):
     except CachedImage.DoesNotExist:
         return JsonResponse({'message': 'The image with that index does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
-    print(cachedimage.photo_modified)
-    #return render(request,'index.html',{'response':cachedimage})
     return JsonResponse({"original_image":str(cachedimage.photo),
                          "modified_image":str(cachedimage.photo_modified.url),
                          "meta_data":str(cachedimage.exif)})

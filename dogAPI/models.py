@@ -4,7 +4,7 @@ import urllib.request
 import os
 from django.core.files import File
 from imagekit.models import ImageSpecField
-from imagekit.processors import TrimBorderColor, Adjust
+from imagekit.processors import TrimBorderColor, Adjust, ResizeToFill
 
 from exiffield.fields import ExifField
 
@@ -20,10 +20,12 @@ class CachedImage(models.Model):
         )
     photo_modified = ImageSpecField(source='photo',
                                     processors=[TrimBorderColor(),
-                                               Adjust(contrast=1.2, sharpness=1.1)
+                                               Adjust(contrast=90.2, sharpness=1.1),
+                                                ResizeToFill(100,50)
                                                ],
                                     format='JPEG',
-                                    options={'quality': 60})
+                                    options={'quality': 6},
+                                    )
 
     def cache(self):
         """Store image locally if we have a URL"""
@@ -34,4 +36,5 @@ class CachedImage(models.Model):
                     os.path.basename(self.url),
                     File(open(result[0], 'rb'))
                     )
+            
             self.save()    
