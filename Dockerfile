@@ -1,7 +1,15 @@
 FROM python:3.9
-ENV PYTHONDONTWRIEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+
+# Allows docker to cache installed dependencies between builds
+COPY requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Mounts the application code to the image
+COPY . code
 WORKDIR /code
-COPY Pipfile Pipfile.lock /code/
-RUN pip install pipenv && pipenv install --system
-COPY . /code/
+
+EXPOSE 8080
+
+# runs the production server
+ENTRYPOINT ["python", "manage.py"]
+CMD ["runserver", "127.0.0.1:8080"]
